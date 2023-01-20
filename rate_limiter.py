@@ -26,3 +26,5 @@ class RateLimiter:
         earliest_request_time_within_time_limit = request_times[0]
         next_possible_request_time = earliest_request_time_within_time_limit + self.time_interval
         seconds_to_retry = (next_possible_request_time - datetime.now()).seconds
+
+        return seconds_to_retry
