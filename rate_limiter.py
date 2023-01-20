@@ -6,7 +6,7 @@ class RateLimiter:
         self.time_interval = timedelta(seconds=time_interval_secs)
         self.request_times_dict = {}
         
-    def make_request(self, request_ip):
+    def make_request(self, request_ip: str):
         current_time = datetime.now()
         
         self.request_times_dict.setdefault(request_ip, [])
@@ -16,7 +16,13 @@ class RateLimiter:
         self.request_times_dict[request_ip] = request_times
 
         if len(request_times) >= self.max_requests:
-            return "429 - Rate limit exceeded. Try again"
+            seconds_to_retry = self.calculate_seconds_to_retry(request_times)
+            return f"429 - Rate limit exceeded. Try again in {seconds_to_retry} seconds"
         else:
             self.request_times_dict[request_ip].append(current_time)
             return "Request processed"
+
+    def calculate_seconds_to_retry(self, request_times: list) -> int:
+        earliest_request_time_within_time_limit = request_times[0]
+        next_possible_request_time = earliest_request_time_within_time_limit + self.time_interval
+        seconds_to_retry = (next_possible_request_time - datetime.now()).seconds
