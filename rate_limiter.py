@@ -17,13 +17,12 @@ class RateLimiter:
             request_times=self.request_times_dict[request_ip]
         )
 
-        self.request_times_dict[request_ip] = request_times
-
         if len(request_times) >= self.max_requests:
             seconds_to_retry = self.calculate_seconds_to_retry(request_times)
             return f"429 - Rate limit exceeded. Try again in {seconds_to_retry} seconds"
         else:
-            self.request_times_dict[request_ip].append(current_time)
+            request_times.append(current_time)
+            self.request_times_dict[request_ip] = request_times
             return "Request processed"
 
     def make_request_figma_strategy(self, request_ip: str):

@@ -1,2 +1,7 @@
 # AirTasker
  AirTasker Recruitment Challenge
+
+There are different rate-limiting approaches including the token bucket, fixed window counters and sliding window log. I decided to implement the sliding window log because it seemed to be simpler to implement than the token bucket, it is memory efficient and it would be more accurate than the fixed window strategy (i.e. it wouldn't let through requests at the window boundary that would exceed the desired rate limitation). 
+
+I implemented 2 versions of the sliding window strategy -- my first solution, which is more simple, and another strategy implemented by Figma that is better optimized for memory. (Figma Strategy: https://www.figma.com/blog/an-alternative-approach-to-rate-limiting/)
+My original solution uses a dictionary to map the ip address of a request to a list of timestamps for all of the request that occurred within the window timeframe. The size of these lists could get very large if there were a spike in requests from a user. In the Figma strategy, instead of mapping each ip address to a list, it is mapped to another dictionary which stores the number of requests received by that user within the window timeframe per minute. This way, we would have at most 60 key/value pairs in a dictionary belonging to a particular user. I decided to include both strategies in my submission to show that the code can be easily extended to support additional functionality.
