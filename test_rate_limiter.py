@@ -22,6 +22,25 @@ class TestRateLimiter(unittest.TestCase):
 
         self.assertEqual(limiter.make_request(request_ip1), f"429 - Rate limit exceeded. Try again in {seconds_to_retry} seconds", "Request should not be processed")
 
+    def test_rate_limiter_figma_strategy(self):
+        MAX_REQUESTS_PER_HOUR = 100
+        ONE_HOUR_IN_SECONDS = 60 * 60
+        
+        limiter = RateLimiter(MAX_REQUESTS_PER_HOUR, ONE_HOUR_IN_SECONDS)
+
+        request_ip1 = "ip address 1"
+
+        for i in range(MAX_REQUESTS_PER_HOUR):
+            self.assertEqual(limiter.make_request_figma_strategy(request_ip1), "Request processed", "Request should be processed")
+
+        earliest_request_time_within_hour = sorted(limiter.request_times_dict[request_ip1])[0]
+        next_possible_request_time = earliest_request_time_within_hour + timedelta(seconds=ONE_HOUR_IN_SECONDS)
+        seconds_to_retry = (next_possible_request_time - datetime.now()).seconds
+
+        self.assertEqual(limiter.make_request_figma_strategy(request_ip1), f"429 - Rate limit exceeded. Try again in {seconds_to_retry} seconds", "Request should not be processed")
+# start = 1:01:59 -> 1:01
+# next_retry = 2:01 (should be 2:01:59)
+# time_now = 2:00:59 -> 1 second to retry (should be 60 seconds)
 
 if __name__ == '__main__':
     unittest.main()
