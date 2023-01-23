@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 class RateLimiter:
     def __init__(self, max_requests, time_interval_secs):
@@ -12,7 +12,10 @@ class RateLimiter:
         
         self.request_times_dict.setdefault(request_ip, [])
 
-        request_times = [time for time in self.request_times_dict[request_ip] if current_time - time < self.time_interval]
+        request_times = self.update_request_window(
+            current_time=current_time,
+            request_times=self.request_times_dict[request_ip]
+        )
 
         self.request_times_dict[request_ip] = request_times
 
@@ -28,12 +31,10 @@ class RateLimiter:
         
         self.request_times_dict.setdefault(request_ip, {current_time: 0})
 
-        # for every minute, add timestamp: num requests to request dict for that user
-        user_requests = {
-            timestamp: num_requests
-            for timestamp, num_requests in self.request_times_dict[request_ip].items()
-            if current_time - timestamp < self.time_interval
-        }
+        user_requests = self.update_request_window(
+            current_time=current_time,
+            request_times=self.request_times_dict[request_ip]
+        )
 
         if sum(user_requests.values()) >= self.max_requests:
             seconds_to_retry = self.calculate_seconds_to_retry(sorted(user_requests))
@@ -49,3 +50,21 @@ class RateLimiter:
         seconds_to_retry = (next_possible_request_time - datetime.now()).seconds
 
         return seconds_to_retry
+
+    def update_request_window(self, current_time: datetime, request_times: Union[list, dict]) -> list:
+
+        if type(request_times) == list:
+            for time in request_times:
+                if current_time - time <= self.time_interval:
+                    break
+                else:
+                    request_times.remove(time)
+        else:
+            for timestamp in sorted(request_times):
+
+                if current_time - timestamp <= self.time_interval:
+                    break
+                else:
+                    del request_times[timestamp]
+
+        return request_times

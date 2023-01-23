@@ -38,9 +38,6 @@ class TestRateLimiter(unittest.TestCase):
         seconds_to_retry = (next_possible_request_time - datetime.now()).seconds
 
         self.assertEqual(limiter.make_request_figma_strategy(request_ip1), f"429 - Rate limit exceeded. Try again in {seconds_to_retry} seconds", "Request should not be processed")
-# start = 1:01:59 -> 1:01
-# next_retry = 2:01 (should be 2:01:59)
-# time_now = 2:00:59 -> 1 second to retry (should be 60 seconds)
 
 if __name__ == '__main__':
     unittest.main()
